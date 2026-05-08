@@ -220,6 +220,9 @@ export function startModelProxy({ targetUrl, apiKey, startPort = 3200, backends,
             apiKey: startBackend ? startBackend.apiKey : apiKey,
             useBearer: startBackend ? startBackend.useBearer : initialBearer,
             hadNonAnthropicSession: !!startBackend,
+            // Last /v1/messages we forwarded; surfaced via /_proxy/status so a
+            // statusLine integration can show client → wire mapping live.
+            lastRequest: null,
         };
 
         let reqCount = 0;
@@ -237,6 +240,8 @@ export function startModelProxy({ targetUrl, apiKey, startPort = 3200, backends,
             const summary = {};
             let totalActual = 0;
             let totalAnthropic = 0;
+            let totalInput = 0;
+            let totalOutput = 0;
             for (const [backend, tokens] of Object.entries(costs)) {
                 const p = PRICING_PER_M[backend] || PRICING_PER_M._single;
                 const ap = PRICING_PER_M.anthropic;
@@ -244,6 +249,8 @@ export function startModelProxy({ targetUrl, apiKey, startPort = 3200, backends,
                 const anthropicEq = (tokens.input * ap.input + tokens.output * ap.output) / 1_000_000;
                 totalActual += actual;
                 totalAnthropic += anthropicEq;
+                totalInput += tokens.input;
+                totalOutput += tokens.output;
                 summary[backend] = {
                     input_tokens: tokens.input,
                     output_tokens: tokens.output,
@@ -254,6 +261,8 @@ export function startModelProxy({ targetUrl, apiKey, startPort = 3200, backends,
             }
             return {
                 backends: summary,
+                total_input_tokens: totalInput,
+                total_output_tokens: totalOutput,
                 total_cost: +totalActual.toFixed(4),
                 anthropic_equivalent: +totalAnthropic.toFixed(4),
                 savings: +((totalAnthropic - totalActual).toFixed(4)),
@@ -290,8 +299,14 @@ export function startModelProxy({ targetUrl, apiKey, startPort = 3200, backends,
                     clientRes.writeHead(200, { 'content-type': 'application/json' });
                     clientRes.end(JSON.stringify({
                         mode: state.mode,
+                        backend_host: state.target.hostname,
                         uptime: Math.round((Date.now() - t0Global) / 1000),
                         requests: reqCount,
+                        last_request: state.lastRequest,
+                        // Statusline looks up the wire-side mapping for whatever
+                        // model Claude Code says it's using (via stdin), without
+                        // having to duplicate the table in shell.
+                        model_remap: MODEL_REMAP[state.mode] || {},
                     }));
                     return;
                 }
@@ -360,6 +375,7 @@ export function startModelProxy({ targetUrl, apiKey, startPort = 3200, backends,
                 if (isMessagesPath) {
                     try { parsed = JSON.parse(body); } catch {}
                 }
+                const clientModel = parsed?.model || null;
 
                 // Only the LATEST message triggers the Anthropic reroute
                 // (a fresh attachment, or a Read tool_result that just came
@@ -481,7 +497,25 @@ export function startModelProxy({ targetUrl, apiKey, startPort = 3200, backends,
                             stripUnsignedThinkingBlocks(parsed);
                         }
                     } else if (isModelCall) {
-                        stripAllThinkingBlocks(parsed);
+                        // DeepSeek's anthropic-compat endpoint expects its own
+                        // thinking blocks passed back verbatim for continuity
+                        // ("content[].thinking ... must be passed back"), so
+                        // we don't strip content thinking blocks here. Top-level
+                        // thinking/context_management still go — non-Anthropic
+                        // backends don't honor Anthropic's extended-thinking
+                        // spec consistently, and a stale config field is a
+                        // noisier error than no config at all.
+                        delete parsed.thinking;
+                        delete parsed.context_management;
+                    }
+
+                    if (clientModel) {
+                        state.lastRequest = {
+                            client_model: clientModel,
+                            wire_model: parsed.model || clientModel,
+                            destination: dest.hostname,
+                            timestamp: Date.now(),
+                        };
                     }
 
                     body = Buffer.from(JSON.stringify(parsed));

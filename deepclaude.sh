@@ -245,6 +245,38 @@ show_help() {
     echo "  CHEAPCLAUDE_DEFAULT_BACKEND  Default backend (default: ds)"
 }
 
+# Auto-installs the deepclaude statusLine into ~/.claude/settings.json on
+# every launch. No-op if the user already has a statusLine configured
+# (either ours or their own custom command). Silent skip if jq isn't on
+# PATH so deepclaude still launches without it.
+ensure_statusline_installed() {
+    command -v jq >/dev/null 2>&1 || return 0
+
+    local script_path="$SCRIPT_DIR/bin/deepclaude-statusline"
+    [[ -x "$script_path" ]] || return 0
+
+    local settings_dir="$HOME/.claude"
+    local settings_file="$settings_dir/settings.json"
+    mkdir -p "$settings_dir"
+    [[ -f "$settings_file" ]] || echo '{}' > "$settings_file"
+
+    local existing
+    existing=$(jq -r '.statusLine.command // empty' "$settings_file" 2>/dev/null || echo "")
+
+    if [[ -z "$existing" ]]; then
+        local tmp
+        tmp=$(mktemp)
+        if jq --arg cmd "$script_path" \
+            '. + {statusLine: {type: "command", command: $cmd}}' \
+            "$settings_file" > "$tmp"; then
+            mv "$tmp" "$settings_file"
+            echo "  Installed deepclaude statusLine in $settings_file"
+        else
+            rm -f "$tmp"
+        fi
+    fi
+}
+
 do_switch() {
     local backend="$SWITCH_BACKEND"
     case "$backend" in
@@ -325,6 +357,11 @@ launch_claude() {
     fi
 
     resolve_backend
+    ensure_statusline_installed
+
+    echo "  Starting model proxy for $BACKEND..."
+    start_proxy
+    echo "  Proxy log: $PROXY_LOG"
 
     echo "  Starting model proxy for $BACKEND..."
     # Call directly (not via $()): start_proxy sets PROXY_PID/PROXY_PORT/PROXY_LOG
@@ -363,6 +400,7 @@ launch_remote() {
     fi
 
     resolve_backend
+    ensure_statusline_installed
 
     echo "  Starting model proxy for $BACKEND..."
     start_proxy
