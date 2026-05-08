@@ -22,6 +22,13 @@ const MODEL_REMAP = {
         'claude-sonnet-4-5-20250929': 'deepseek/deepseek-v4-flash',
         'claude-haiku-4-5-20251001':  'deepseek/deepseek-v4-flash',
     },
+    fireworks: {
+        'claude-opus-4-6':    'accounts/fireworks/models/deepseek-v4-pro',
+        'claude-opus-4-7':    'accounts/fireworks/models/deepseek-v4-pro',
+        'claude-sonnet-4-6':  'accounts/fireworks/models/deepseek-v4-flash',
+        'claude-sonnet-4-5-20250929': 'accounts/fireworks/models/deepseek-v4-flash',
+        'claude-haiku-4-5-20251001':  'accounts/fireworks/models/deepseek-v4-flash',
+    },
 };
 
 const PRICING_PER_M = {
@@ -324,6 +331,11 @@ export function startModelProxy({ targetUrl, apiKey, startPort = 3200, backends,
                             console.log(`[MODEL-PROXY] #${reqId} model remap: ${parsed.model} → ${mapped}`);
                             parsed.model = mapped;
                             body = Buffer.from(JSON.stringify(parsed));
+                        } else if (typeof parsed.model === 'string' && parsed.model.startsWith('claude-')) {
+                            // Only warn for canonical claude-* names — those are the
+                            // ones that need a remap entry. Backend-native names
+                            // (e.g. deepseek-v4-pro) are deliberate in non-auto mode.
+                            console.warn(`[MODEL-PROXY] #${reqId} WARN: no remap for "${parsed.model}" in mode "${state.mode}" — forwarding as-is`);
                         }
                     } catch { /* not JSON or parse error, pass through */ }
                 }
