@@ -343,8 +343,10 @@ launch_claude() {
     # sees a Claude model (unlocking auto-mode and bypassPermissions).
     export ANTHROPIC_BASE_URL="http://127.0.0.1:$PROXY_PORT"
     set_model_env
-    # Proxy injects auth itself; the client must not also send credentials.
-    unset ANTHROPIC_API_KEY ANTHROPIC_AUTH_TOKEN
+    # Drop ANTHROPIC_API_KEY (proxy injects backend auth for non-image turns),
+    # but keep ANTHROPIC_AUTH_TOKEN — the proxy reroutes image turns to
+    # Anthropic and needs the user's OAuth token to authenticate there.
+    unset ANTHROPIC_API_KEY
 
     # Don't exec — we want the EXIT trap to clean up the proxy.
     run_claude_with_log_tail claude "$@"
