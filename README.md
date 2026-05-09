@@ -1,325 +1,320 @@
-# deepclaude
+# DeepClaude
 
-Use Claude Code's autonomous agent loop with **DeepSeek V4 Pro**, **OpenRouter**, or any Anthropic-compatible backend. Same UX, 17x cheaper.
+**Claude Code’s agentic workflow, routed through DeepSeek and other lower-cost backends — with the model route, token usage, and spend visible while you work.**
 
-![Remote control running DeepSeek V4 Pro in the browser](screenshots/remote-control-deepseek.png)
+DeepClaude is a small launcher + local Anthropic-compatible proxy for [Claude Code](https://docs.anthropic.com/en/docs/claude-code). It keeps the Claude Code interface you already know, but sends requests to backends such as DeepSeek, OpenRouter, or Fireworks instead of forcing every turn through Anthropic.
 
-## What this does
+<p align="center">
+  <img src="docs/assets/deepclaude-normal-mode-terminal.png" alt="DeepClaude normal mode inside Claude Code" width="900">
+</p>
 
-Claude Code is the best autonomous coding agent — but it costs $200/month with usage caps. DeepSeek V4 Pro scores 96.4% on LiveCodeBench and costs $0.87/M output tokens.
+## Why use it?
 
-**deepclaude** swaps the brain while keeping the body:
+Claude Code is the best coding-agent interface many of us have used: repo awareness, tool orchestration, permissions, planning, editing, terminal execution, and a polished interactive loop.
 
-```
-Your terminal
-  +-- Claude Code CLI (tool loop, file editing, bash, git - unchanged)
-        +-- API calls -> DeepSeek V4 Pro ($0.87/M) instead of Anthropic ($15/M)
-```
+The tradeoff is cost and routing opacity.
 
-Everything works: file reading, editing, bash execution, subagent spawning, autonomous multi-step coding loops. The only difference is which model thinks.
+DeepClaude keeps the UX and swaps the backend path:
 
-## Quick start (2 minutes)
+- **Use Claude Code as the front end.** Keep `/model`, permissions, statusLine, IDE integration, and the autonomous agent loop.
+- **Route through cheaper backends.** Default to DeepSeek, or switch to OpenRouter / Fireworks / Anthropic when you need them.
+- **See the truth in the status line.** Claude Code may show canonical Claude names for compatibility; DeepClaude shows the actual backend route, tokens, and cost.
+- **Unlock auto workflows.** `--auto` lets Claude Code use its auto/bypassPermissions loop while DeepClaude maps those canonical Claude model names to your backend.
+- **Handle vision turns safely.** Image-containing turns can fall back to a vision-capable backend, then text-only follow-ups return to your primary route.
 
-### 1. Get a DeepSeek API key
+## What this fork adds
 
-Sign up at [platform.deepseek.com](https://platform.deepseek.com), add $5 credit, copy your API key.
+This fork focuses on making DeepClaude feel like a real daily driver instead of a one-off proxy script:
 
-### 2. Set environment variables
+- **Proxy-first launch:** `deepclaude` starts and supervises the local proxy before Claude Code opens.
+- **Live, truthful `statusLine`:** shows `Claude model → backend model on backend host`, token counts, cumulative spend, and estimated savings.
+- **`--auto` mode:** maps Claude Code’s canonical auto/bypass model names onto the selected backend, so auto workflows work without lying about where requests go.
+- **Image fallback:** routes only image-bearing requests to a vision-capable backend instead of failing the whole session.
+- **Thinking-block continuity:** preserves Claude Code’s expected thinking/tool-call structure across proxy rewrites.
+- **Diagnostics:** status, cost, remote-control, and backend-switch commands for debugging a running session.
 
-**Windows (PowerShell):**
-```powershell
-setx DEEPSEEK_API_KEY "sk-your-key-here"
-```
+## Quick start
 
-**macOS/Linux:**
+### 1. Clone
+
 ```bash
-echo 'export DEEPSEEK_API_KEY="sk-your-key-here"' >> ~/.bashrc
-source ~/.bashrc
+git clone https://github.com/BenSheridanEdwards/DeepClaude.git
+cd DeepClaude
 ```
 
-### 3. Install
+### 2. Add an API key
 
-**Windows:**
-```powershell
-# Copy the script to a directory in your PATH
-Copy-Item deepclaude.ps1 "$env:USERPROFILE\.local\bin\deepclaude.ps1"
+Create `.env` in the repo root. Use whichever backend you want:
 
-# Or add the repo directory to PATH
-setx PATH "$env:PATH;C:\path\to\deepclaude"
+```bash
+# DeepSeek is the default backend
+DEEPSEEK_API_KEY=<your-deepseek-key>
+
+# Optional alternatives
+OPENROUTER_API_KEY=<your-openrouter-key>
+FIREWORKS_API_KEY=<your-fireworks-key>
+
+# Optional default backend: ds | or | fw | anthropic
+CHEAPCLAUDE_DEFAULT_BACKEND=ds
+
+# Optional image fallback backend: openrouter | anthropic | off
+DEEPCLAUDE_IMAGE_FALLBACK=openrouter
 ```
 
-**macOS/Linux:**
+You can also export these variables in your shell instead of using `.env`.
+
+### 3. Install the launcher
+
 ```bash
 chmod +x deepclaude.sh
-sudo ln -s "$(pwd)/deepclaude.sh" /usr/local/bin/deepclaude
+ln -sf "$PWD/deepclaude.sh" /usr/local/bin/deepclaude
 ```
 
-### 4. Use it
+Or run it directly:
 
 ```bash
-deepclaude                  # Launch Claude Code with DeepSeek V4 Pro
-deepclaude --status         # Show available backends and keys
-deepclaude --backend or     # Use OpenRouter (cheapest, $0.44/M input)
-deepclaude --backend fw     # Use Fireworks AI (fastest, US servers)
-deepclaude --backend anthropic  # Normal Claude Code (when you need Opus)
-deepclaude --cost           # Show pricing comparison
-deepclaude --benchmark      # Latency test across all providers
-deepclaude --switch ds      # Switch backend mid-session (no restart)
+./deepclaude.sh
 ```
+
+### 4. Launch Claude Code through DeepClaude
+
+```bash
+deepclaude
+```
+
+That starts the local proxy, configures Claude Code to talk to it, installs the DeepClaude statusLine, and opens Claude Code.
+
+## Two modes
+
+### Normal mode
+
+```bash
+deepclaude
+```
+
+Use this when you want the most transparent path: Claude Code requests are routed through the selected backend and the statusLine shows the real destination.
+
+Example statusLine:
+
+```text
+[claude-opus-4-7 → deepseek-v4-pro on api.deepseek.com] · ↑5.2K ↓1.1K · $0.04 (saved $0.13)
+```
+
+### Auto mode
+
+```bash
+deepclaude --auto
+```
+
+Auto mode is for Claude Code’s faster, more autonomous loop — including bypassPermissions-style workflows.
+
+<p align="center">
+  <img src="docs/assets/deepclaude-auto-mode-terminal.png" alt="DeepClaude auto mode inside Claude Code" width="900">
+</p>
+
+Important caveat: Claude Code’s UI may still display canonical Claude model names because that is how Claude Code enables auto/bypass flows. DeepClaude’s statusLine is the source of truth for the actual backend route and cost.
+
+## Backend selection
+
+Pick a backend at launch:
+
+```bash
+deepclaude --backend ds          # DeepSeek
+deepclaude --backend or          # OpenRouter
+deepclaude --backend fw          # Fireworks
+deepclaude --backend anthropic   # Anthropic passthrough
+```
+
+Or set a default:
+
+```bash
+CHEAPCLAUDE_DEFAULT_BACKEND=or deepclaude
+```
+
+Supported backend aliases:
+
+- `ds`: DeepSeek Anthropic-compatible endpoint
+- `or`: OpenRouter
+- `fw`: Fireworks
+- `anthropic`: Anthropic passthrough
 
 ## How it works
 
-Claude Code reads these environment variables to determine where to send API calls:
-
-| Variable | What it does |
-|---|---|
-| `ANTHROPIC_BASE_URL` | API endpoint (default: api.anthropic.com) |
-| `ANTHROPIC_AUTH_TOKEN` | API key for the backend |
-| `ANTHROPIC_DEFAULT_OPUS_MODEL` | Model name for Opus-tier tasks |
-| `ANTHROPIC_DEFAULT_SONNET_MODEL` | Model name for Sonnet-tier tasks |
-| `ANTHROPIC_DEFAULT_HAIKU_MODEL` | Model name for Haiku-tier (subagents) |
-| `CLAUDE_CODE_SUBAGENT_MODEL` | Model for spawned subagents |
-
-**deepclaude** sets these per-session (not permanently), launches Claude Code, then restores your original settings on exit.
-
-## Supported backends
-
-| Backend | Flag | Input/M | Output/M | Servers | Notes |
-|---|---|---|---|---|---|
-| **DeepSeek** (default) | `--backend ds` | $0.44 | $0.87 | China | Auto context caching (120x cheaper on repeat turns) |
-| **OpenRouter** | `--backend or` | $0.44 | $0.87 | US | Cheapest, lowest latency from US/EU |
-| **Fireworks AI** | `--backend fw` | $1.74 | $3.48 | US | Fastest inference |
-| **Anthropic** | `--backend anthropic` | $3.00 | $15.00 | US | Original Claude Opus (for hard problems) |
-
-### Setup per backend
-
-**DeepSeek** (default - just needs `DEEPSEEK_API_KEY`):
-```bash
-setx DEEPSEEK_API_KEY "sk-..."           # Windows
-export DEEPSEEK_API_KEY="sk-..."         # macOS/Linux
+```text
+Claude Code
+   │
+   │ Anthropic Messages API requests
+   ▼
+DeepClaude local proxy (127.0.0.1:3200)
+   │
+   ├─ rewrites model names when needed
+   ├─ preserves Claude Code tool/thinking structure
+   ├─ tracks tokens, costs, and estimated savings
+   ├─ exposes /_proxy/status and /_proxy/cost
+   │
+   ▼
+DeepSeek / OpenRouter / Fireworks / Anthropic
 ```
 
-**OpenRouter** (optional):
-```bash
-setx OPENROUTER_API_KEY "sk-or-..."      # Windows
-export OPENROUTER_API_KEY="sk-or-..."    # macOS/Linux
-```
+DeepClaude does not replace Claude Code. It sits between Claude Code and the model provider, translating just enough for Claude Code’s UX to keep working while the backend changes.
 
-**Fireworks AI** (optional):
-```bash
-setx FIREWORKS_API_KEY "fw_..."          # Windows
-export FIREWORKS_API_KEY="fw_..."        # macOS/Linux
-```
+## Live switching and diagnostics
 
-## Cost comparison
-
-| Usage level | Anthropic Max | deepclaude (DeepSeek) | Savings |
-|---|---|---|---|
-| Light (10 days/mo) | $200/mo (capped) | ~$20/mo | 90% |
-| Heavy (25 days/mo) | $200/mo (capped) | ~$50/mo | 75% |
-| With auto loops | $200/mo (capped) | ~$80/mo | 60% |
-
-DeepSeek's automatic context caching makes agent loops extremely cheap - after the first request, the system prompt and file context are cached at $0.004/M (vs $0.44/M uncached).
-
-## What works and what doesn't
-
-### Works
-- File reading, writing, editing (Read/Write/Edit tools)
-- Bash/PowerShell execution
-- Glob and Grep search
-- Multi-step autonomous tool loops
-- Subagent spawning
-- Git operations
-- Project initialization (`/init`)
-- Thinking mode (enabled by default)
-
-### Doesn't work or degraded
-| Feature | Reason |
-|---|---|
-| Image/vision input | DeepSeek's Anthropic endpoint doesn't support images |
-| Parallel tool use | Supported by DeepSeek (up to 128 per call), but Claude Code sends tools sequentially by default |
-| MCP server tools | Not supported through compatibility layer |
-| Prompt caching savings | DeepSeek has its own caching (automatic), but Anthropic's `cache_control` is ignored |
-
-### Intelligence difference
-- **Routine tasks** (80% of work): DeepSeek V4 Pro is comparable to Claude Opus
-- **Complex reasoning** (20%): Claude Opus is stronger - switch with `--backend anthropic`
-
-## Live switching (no restart)
-
-Switch between Anthropic and DeepSeek **mid-session** - from inside Claude Code itself. No restart, no terminal commands. Just type a slash command.
-
-**In Claude Code terminal:**
-
-![/deepseek in Claude Code CLI](screenshots/terminal%20for%20terminal%20embed2.PNG)
-
-**In Claude Code VS Code extension:**
-
-![/deepseek in VS Code extension](screenshots/terminal%20for%20vscode%20embed2.PNG)
-
-### How it works
-
-The proxy runs on `localhost:3200` and intercepts all API calls. A control endpoint (`/_proxy/mode`) lets you switch the active backend instantly:
-
-```
-Claude Code -> localhost:3200 (proxy)
-                 |
-                 +-- /_proxy/mode POST -> switch backend
-                 +-- /_proxy/status GET -> current backend + uptime
-                 +-- /_proxy/cost GET -> token usage + cost savings
-                 |
-                 +-- /v1/messages -> active backend (DeepSeek/OpenRouter/Anthropic)
-                 +-- everything else -> Anthropic (passthrough)
-```
-
-### Option 1: Slash commands (recommended)
-
-Add these files to `~/.claude/commands/`:
-
-**`deepseek.md`:**
-```
-Switch the model proxy to DeepSeek. Run this command silently and report the result:
-curl -sX POST http://127.0.0.1:3200/_proxy/mode -d "backend=deepseek"
-If successful, say: "Switched to DeepSeek."
-```
-
-**`anthropic.md`:**
-```
-Switch the model proxy back to Anthropic. Run this command silently and report the result:
-curl -sX POST http://127.0.0.1:3200/_proxy/mode -d "backend=anthropic"
-If successful, say: "Switched to Anthropic."
-```
-
-**`openrouter.md`:**
-```
-Switch the model proxy to OpenRouter. Run this command silently and report the result:
-curl -sX POST http://127.0.0.1:3200/_proxy/mode -d "backend=openrouter"
-If successful, say: "Switched to OpenRouter."
-```
-
-Then type `/deepseek`, `/anthropic`, or `/openrouter` in any Claude Code session to switch instantly.
-
-### Option 2: CLI flag
+Check the running proxy:
 
 ```bash
-deepclaude --switch deepseek    # or: ds, or, fw, anthropic
-deepclaude -s anthropic
+deepclaude --status
+deepclaude --cost
 ```
 
-### Option 3: VS Code keyboard shortcuts
-
-Add to `.vscode/tasks.json`:
-```json
-{
-  "version": "2.0.0",
-  "tasks": [
-    {
-      "label": "Proxy: Switch to DeepSeek",
-      "type": "shell",
-      "command": "Invoke-RestMethod -Uri http://127.0.0.1:3200/_proxy/mode -Method Post -Body 'backend=deepseek'",
-      "presentation": { "reveal": "always" },
-      "problemMatcher": []
-    },
-    {
-      "label": "Proxy: Switch to Anthropic",
-      "type": "shell",
-      "command": "Invoke-RestMethod -Uri http://127.0.0.1:3200/_proxy/mode -Method Post -Body 'backend=anthropic'",
-      "presentation": { "reveal": "always" },
-      "problemMatcher": []
-    }
-  ]
-}
-```
-
-Then bind in `keybindings.json`:
-```json
-{ "key": "ctrl+alt+d", "command": "workbench.action.tasks.runTask", "args": "Proxy: Switch to DeepSeek" },
-{ "key": "ctrl+alt+a", "command": "workbench.action.tasks.runTask", "args": "Proxy: Switch to Anthropic" }
-```
-
-### Cost tracking
-
-The proxy tracks token usage and calculates savings vs Anthropic pricing:
+Switch backend while the proxy is running:
 
 ```bash
-curl -s http://127.0.0.1:3200/_proxy/cost
+deepclaude --switch ds
+deepclaude --switch or
+deepclaude --switch fw
+deepclaude --switch anthropic
 ```
 
-Returns:
-```json
-{
-  "backends": {
-    "deepseek": {
-      "input_tokens": 125000,
-      "output_tokens": 45000,
-      "requests": 12,
-      "cost": 0.0941,
-      "anthropic_equivalent": 1.05
-    }
-  },
-  "total_cost": 0.0941,
-  "anthropic_equivalent": 1.05,
-  "savings": 0.9559
-}
+Remote-control endpoint:
+
+```bash
+deepclaude --remote
 ```
+
+The proxy also exposes local diagnostic endpoints:
+
+```bash
+curl http://127.0.0.1:3200/_proxy/status
+curl http://127.0.0.1:3200/_proxy/cost
+```
+
+## Image fallback
+
+Some backends are great for text/code but do not accept images. DeepClaude can detect image-bearing requests and route those specific turns to a vision-capable fallback.
+
+```bash
+DEEPCLAUDE_IMAGE_FALLBACK=openrouter deepclaude
+```
+
+Behavior:
+
+- If a turn contains an image, DeepClaude routes that turn to the configured vision fallback.
+- If the next turn is text-only, it returns to the primary backend.
+- If you want follow-up vision reasoning, attach the image again or keep using a vision-capable primary backend.
+
+This keeps normal coding turns cheap while avoiding hard failures when you paste screenshots into Claude Code.
+
+## Cost tracking
+
+DeepClaude tracks cumulative input tokens, output tokens, estimated backend cost, Anthropic-equivalent cost, and estimated savings.
+
+Use:
+
+```bash
+deepclaude --cost
+```
+
+Or just watch the Claude Code statusLine while you work.
+
+The goal is not fake precision; providers can change pricing and rounding. The goal is operational visibility: you should know which backend handled your request and roughly what the session is costing.
+
+## Trust notes
+
+DeepClaude is intentionally explicit about the places where proxying can be confusing:
+
+- **Claude Code model names are compatibility labels.** In auto mode, Claude Code may show canonical Claude names because its permission/autonomy features are tied to those labels.
+- **The DeepClaude statusLine is the route-of-record.** It shows the backend model and host that actually handled the request.
+- **Image fallback is turn-scoped.** It does not permanently switch the whole session unless you choose a vision-capable backend yourself.
+- **The proxy is local.** Claude Code talks to `127.0.0.1`; the proxy then talks to your selected backend.
+- **Secrets stay in your environment.** Put API keys in `.env` or exported shell variables. Do not commit them.
 
 ## VS Code / Cursor integration
 
-Add terminal profiles so you can launch deepclaude from the IDE:
-
-**Settings > JSON:**
-```json
-{
-  "terminal.integrated.profiles.windows": {
-    "DeepSeek Agent": {
-      "path": "powershell.exe",
-      "args": ["-ExecutionPolicy", "Bypass", "-NoExit", "-File", "C:\\path\\to\\deepclaude.ps1"]
-    }
-  }
-}
-```
-
-Or on macOS/Linux:
-```json
-{
-  "terminal.integrated.profiles.linux": {
-    "DeepSeek Agent": {
-      "path": "/usr/local/bin/deepclaude"
-    }
-  }
-}
-```
-
-## Remote control (`--remote`)
-
-Open a Claude Code session in any browser - with DeepSeek as the brain:
+Claude Code’s IDE integrations continue to work because DeepClaude launches Claude Code itself. Start DeepClaude from the repo you want Claude Code to inspect:
 
 ```bash
-deepclaude --remote                # Remote control + DeepSeek
-deepclaude --remote -b or          # Remote control + OpenRouter
-deepclaude --remote -b anthropic   # Remote control + Anthropic (normal)
+cd /path/to/your/project
+deepclaude
 ```
 
-This prints a `https://claude.ai/code/session_...` URL you can open on your phone, tablet, or any browser.
+Claude Code still sees the working directory, files, terminal, and IDE context. DeepClaude only changes the model transport path.
 
-### How it works
+## Troubleshooting
 
-Remote control needs Anthropic's bridge for the WebSocket connection, but model calls can go elsewhere. deepclaude starts a local proxy that splits the traffic:
+### `auto mode isn't available for this model`
 
-```
-claude remote-control
-  +-- Bridge WebSocket -> wss://bridge.claudeusercontent.com (Anthropic, hardcoded)
-  +-- Model API calls  -> http://localhost:3200 (proxy)
-                            +-- /v1/messages -> DeepSeek ($0.87/M)
-                            +-- everything else -> Anthropic (passthrough)
+Use:
+
+```bash
+deepclaude --auto
 ```
 
-### Prerequisites
-- Must be logged into Claude Code: `claude auth login`
-- Must have a claude.ai subscription (the bridge is Anthropic infrastructure)
-- Node.js 18+ (for the proxy)
+Auto mode maps Claude Code’s canonical auto/bypass model labels to the configured backend. Without `--auto`, Claude Code may reject auto workflows for non-canonical model names.
 
-The proxy starts automatically and stops when the session ends. See [proxy/README.md](proxy/README.md) for technical details.
+### No statusLine appears
+
+Install `jq`, then relaunch:
+
+```bash
+brew install jq
+# or: sudo apt-get install jq
+
+deepclaude
+```
+
+DeepClaude installs the statusLine on launch, but Claude Code needs to reload its settings for changes to appear.
+
+### The statusLine says the proxy is unreachable
+
+Make sure DeepClaude launched Claude Code, rather than opening Claude Code directly:
+
+```bash
+deepclaude --status
+deepclaude
+```
+
+If another process is using the proxy port, set a different one:
+
+```bash
+DEEPCLAUDE_PROXY_PORT=3202 deepclaude
+```
+
+### Image turns fail
+
+Configure a vision-capable fallback:
+
+```bash
+DEEPCLAUDE_IMAGE_FALLBACK=openrouter
+OPENROUTER_API_KEY=<your-openrouter-key>
+deepclaude
+```
+
+If your primary backend already supports images, you can disable fallback:
+
+```bash
+DEEPCLAUDE_IMAGE_FALLBACK=off deepclaude
+```
+
+### Claude exits with an upstream error
+
+Check the proxy status and backend key:
+
+```bash
+deepclaude --status
+curl http://127.0.0.1:3200/_proxy/status
+```
+
+Common causes:
+
+- missing or invalid API key
+- backend outage or rate limit
+- unsupported model mapping for the chosen backend
+- corporate/VPN networking blocking the backend endpoint
+
+## Contributing
+
+This fork is biased toward practical Claude Code compatibility: fewer surprises, truthful status, and clean fallbacks. PRs that improve routing correctness, cost visibility, diagnostics, or provider support are welcome.
 
 ## License
 

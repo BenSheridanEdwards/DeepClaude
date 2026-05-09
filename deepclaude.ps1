@@ -27,6 +27,30 @@ param(
 
 $ErrorActionPreference = "Stop"
 
+$ScriptDir = Split-Path -Parent $MyInvocation.MyCommand.Path
+
+function Import-DeepClaudeEnvFile($Path, [bool]$Override) {
+    if (-not (Test-Path $Path)) { return }
+    foreach ($line in Get-Content $Path) {
+        $trimmed = $line.Trim()
+        if (-not $trimmed -or $trimmed.StartsWith("#")) { continue }
+        $parts = $trimmed.Split("=", 2)
+        if ($parts.Count -ne 2) { continue }
+        $key = $parts[0].Trim()
+        if ($key -notin @("DEEPSEEK_API_KEY","OPENROUTER_API_KEY","FIREWORKS_API_KEY","CHEAPCLAUDE_DEFAULT_BACKEND","DEEPCLAUDE_IMAGE_FALLBACK")) { continue }
+        $value = $parts[1].Trim()
+        if (($value.StartsWith('"') -and $value.EndsWith('"')) -or ($value.StartsWith("'") -and $value.EndsWith("'"))) {
+            $value = $value.Substring(1, $value.Length - 2)
+        }
+        if ($Override -or -not [Environment]::GetEnvironmentVariable($key, "Process")) {
+            [Environment]::SetEnvironmentVariable($key, $value, "Process")
+        }
+    }
+}
+
+Import-DeepClaudeEnvFile (Join-Path $ScriptDir ".env.example") $false
+Import-DeepClaudeEnvFile (Join-Path $ScriptDir ".env") $true
+
 if (-not $Backend -and -not $Status -and -not $Cost -and -not $Benchmark -and -not $Help) {
     $Backend = if ($env:CHEAPCLAUDE_DEFAULT_BACKEND) { $env:CHEAPCLAUDE_DEFAULT_BACKEND } else { "ds" }
 }
@@ -152,7 +176,6 @@ if ($Benchmark) {
 
 # --- Remote ---
 if ($Remote) {
-    $ScriptDir = Split-Path -Parent $MyInvocation.MyCommand.Path
     if ($Backend -eq "anthropic") {
         Write-Host "`n  Launching remote control (Anthropic)...`n" -ForegroundColor Cyan
         foreach ($v in @("ANTHROPIC_BASE_URL","ANTHROPIC_AUTH_TOKEN","ANTHROPIC_DEFAULT_OPUS_MODEL",
@@ -172,7 +195,10 @@ if ($Remote) {
     Write-Host "`n  Starting model proxy for $($p.name)..." -ForegroundColor Cyan
 
     $proxyScript = Join-Path $ScriptDir "proxy\start-proxy.js"
-    $proxyProc = Start-Process -FilePath "node" -ArgumentList $proxyScript,$p.url,$p.key -PassThru -WindowStyle Hidden -RedirectStandardOutput "$env:TEMP\deepclaude-proxy-port.txt"
+    $env:CHEAPCLAUDE_TARGET_URL = $p.url
+    $env:CHEAPCLAUDE_API_KEY = $p.key
+    $env:CHEAPCLAUDE_DEFAULT_MODE = if ($Backend -eq "ds") { "deepseek" } elseif ($Backend -eq "or") { "openrouter" } else { "fireworks" }
+    $proxyProc = Start-Process -FilePath "node" -ArgumentList $proxyScript -PassThru -WindowStyle Hidden -RedirectStandardOutput "$env:TEMP\deepclaude-proxy-port.txt"
 
     $tries = 0
     while ($tries -lt 30) {
@@ -212,6 +238,9 @@ if ($Remote) {
             Stop-Process -Id $proxyProc.Id -Force -ErrorAction SilentlyContinue
             Write-Host "  Proxy stopped." -ForegroundColor DarkGray
         }
+        Remove-Item Env:CHEAPCLAUDE_TARGET_URL -ErrorAction SilentlyContinue
+        Remove-Item Env:CHEAPCLAUDE_API_KEY -ErrorAction SilentlyContinue
+        Remove-Item Env:CHEAPCLAUDE_DEFAULT_MODE -ErrorAction SilentlyContinue
     }
     exit 0
 }

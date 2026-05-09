@@ -1,0 +1,26 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="560" viewBox="0 0 1200 560" role="img" aria-label="DeepClaude proxy architecture for normal and remote Claude Code launches">
+<style>
+  .bg{fill:#0b1020}.panel{fill:#111827;stroke:#334155;stroke-width:1.5}.title{fill:#e5e7eb;font:700 22px ui-sans-serif,system-ui,-apple-system,Segoe UI,sans-serif}.text{fill:#cbd5e1;font:15px ui-monospace,SFMono-Regular,Menlo,Consolas,monospace}.muted{fill:#94a3b8;font:14px ui-sans-serif,system-ui}.green{fill:#34d399}.blue{fill:#60a5fa}.yellow{fill:#fbbf24}.red{fill:#fb7185}.purple{fill:#c084fc}.stroke{stroke:#475569;stroke-width:2;fill:none}.arrow{marker-end:url(#arrow)}
+</style>
+<defs><marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M 0 0 L 10 5 L 0 10 z" fill="#64748b"/></marker></defs>
+<rect class="bg" width="1200" height="560" rx="28"/>
+<text x="60" y="72" class="title">Proxy-first architecture</text>
+<text x="60" y="102" class="muted">Normal and remote launches both route model calls through the local proxy, enabling remaps, fallback, status, cost, and live switching.</text>
+<rect x="70" y="170" width="230" height="120" rx="18" class="panel"/>
+<text x="108" y="222" class="title" style="font-size:18px">Claude Code CLI</text>
+<text x="108" y="252" class="muted">tools + agent loop</text>
+<path d="M310 230 H475" class="stroke arrow"/>
+<rect x="480" y="145" width="280" height="170" rx="18" class="panel"/>
+<text x="525" y="192" class="title" style="font-size:18px">DeepClaude proxy</text>
+<text x="525" y="228" class="text">/_proxy/status</text>
+<text x="525" y="258" class="text">/_proxy/cost</text>
+<text x="525" y="288" class="text">/_proxy/mode</text>
+<path d="M770 180 H970" class="stroke arrow"/>
+<path d="M770 240 H970" class="stroke arrow"/>
+<path d="M770 300 H970" class="stroke arrow"/>
+<rect x="975" y="120" width="170" height="80" rx="16" class="panel"/><text x="1015" y="168" class="yellow" style="font:700 16px ui-sans-serif">DeepSeek</text>
+<rect x="975" y="220" width="170" height="80" rx="16" class="panel"/><text x="1010" y="268" class="blue" style="font:700 16px ui-sans-serif">OpenRouter</text>
+<rect x="975" y="320" width="170" height="80" rx="16" class="panel"/><text x="1010" y="368" class="purple" style="font:700 16px ui-sans-serif">Anthropic</text>
+<rect x="145" y="385" width="910" height="70" rx="14" fill="#020617" stroke="#1e293b"/>
+<text x="180" y="428" class="text">deepclaude --switch ds | or | fw | anthropic  ·  curl /_proxy/cost  ·  statusLine polls /_proxy/status</text>
+</svg>
