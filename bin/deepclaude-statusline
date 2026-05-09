@@ -27,6 +27,15 @@ fi
 
 claude_model=$(echo "$input" | jq -r '.model.id // .model.display_name // empty' 2>/dev/null)
 
+strip_ansi() {
+    # Claude Code may pass styled model labels to statusLine; keep the
+    # status text plain so escape suffixes like "[1m" do not leak into
+    # screenshots or README examples.
+    sed -E $'s/\x1B\\[[0-9;?]*[ -/]*[@-~]//g; s/\\[[0-9;?]*m//g'
+}
+
+claude_model=$(printf '%s' "$claude_model" | strip_ansi)
+
 status=$(curl -s --max-time "$TIMEOUT" "http://127.0.0.1:${PROXY_PORT}/_proxy/status" 2>/dev/null || echo "{}")
 cost=$(curl -s --max-time "$TIMEOUT" "http://127.0.0.1:${PROXY_PORT}/_proxy/cost" 2>/dev/null || echo "{}")
 
