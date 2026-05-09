@@ -1,0 +1,23 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="520" viewBox="0 0 1200 520" role="img" aria-label="DeepClaude auto mode unlocks Claude Code auto and bypass permissions modes">
+<style>
+  .bg{fill:#0b1020}.panel{fill:#111827;stroke:#334155;stroke-width:1.5}.title{fill:#e5e7eb;font:700 22px ui-sans-serif,system-ui,-apple-system,Segoe UI,sans-serif}.text{fill:#cbd5e1;font:15px ui-monospace,SFMono-Regular,Menlo,Consolas,monospace}.muted{fill:#94a3b8;font:14px ui-sans-serif,system-ui}.green{fill:#34d399}.blue{fill:#60a5fa}.yellow{fill:#fbbf24}.red{fill:#fb7185}.purple{fill:#c084fc}.stroke{stroke:#475569;stroke-width:2;fill:none}.arrow{marker-end:url(#arrow)}
+</style>
+<defs><marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M 0 0 L 10 5 L 0 10 z" fill="#64748b"/></marker></defs>
+<rect class="bg" width="1200" height="520" rx="28"/>
+<text x="60" y="72" class="title">Opt-in --auto unlocks Claude Code permission modes</text>
+<text x="60" y="102" class="muted">Claude Code gates auto/bypassPermissions behind canonical claude-* model names. DeepClaude can spoof those locally and remap on the wire.</text>
+<rect x="80" y="150" width="460" height="230" rx="18" class="panel"/>
+<text x="110" y="198" class="title" style="font-size:18px">Default</text>
+<text x="110" y="238" class="text">ANTHROPIC_DEFAULT_OPUS_MODEL</text>
+<text x="110" y="272" class="text"><tspan class="yellow">deepseek-v4-pro</tspan></text>
+<text x="110" y="318" class="muted">TUI shows the real backend model.</text>
+<text x="110" y="348" class="red" style="font:15px ui-sans-serif">auto/bypassPermissions stay locked</text>
+<rect x="660" y="150" width="460" height="230" rx="18" class="panel"/>
+<text x="690" y="198" class="title" style="font-size:18px">With --auto</text>
+<text x="690" y="238" class="text">ANTHROPIC_DEFAULT_OPUS_MODEL</text>
+<text x="690" y="272" class="text"><tspan class="purple">claude-opus-4-7</tspan> <tspan class="muted">→</tspan> <tspan class="yellow">deepseek-v4-pro</tspan></text>
+<text x="690" y="318" class="muted">Proxy remaps model names before the backend sees them.</text>
+<text x="690" y="348" class="green" style="font:15px ui-sans-serif">Shift+Tab cycles default → auto → plan → bypassPermissions</text>
+<path d="M555 265 H640" class="stroke arrow"/>
+<text x="60" y="455" class="muted">Use: deepclaude --auto  ·  Trade-off: Claude Code's TUI displays claude-* names; the statusLine shows the actual backend mapping.</text>
+</svg>

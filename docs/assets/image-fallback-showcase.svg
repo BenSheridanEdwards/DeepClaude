@@ -1,0 +1,28 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="520" viewBox="0 0 1200 520" role="img" aria-label="DeepClaude image fallback routes only image turns to Anthropic and returns text turns to cheap backend">
+<style>
+  .bg{fill:#0b1020}.panel{fill:#111827;stroke:#334155;stroke-width:1.5}.title{fill:#e5e7eb;font:700 22px ui-sans-serif,system-ui,-apple-system,Segoe UI,sans-serif}.text{fill:#cbd5e1;font:15px ui-monospace,SFMono-Regular,Menlo,Consolas,monospace}.muted{fill:#94a3b8;font:14px ui-sans-serif,system-ui}.green{fill:#34d399}.blue{fill:#60a5fa}.yellow{fill:#fbbf24}.red{fill:#fb7185}.purple{fill:#c084fc}.stroke{stroke:#475569;stroke-width:2;fill:none}.arrow{marker-end:url(#arrow)}
+</style>
+<defs><marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M 0 0 L 10 5 L 0 10 z" fill="#64748b"/></marker></defs>
+<rect class="bg" width="1200" height="520" rx="28"/>
+<text x="60" y="72" class="title">Transparent image fallback</text>
+<text x="60" y="102" class="muted">Image turns go to Anthropic for vision; follow-up text turns return to the cheap backend automatically.</text>
+<rect x="70" y="150" width="250" height="190" rx="18" class="panel"/>
+<text x="105" y="215" class="title" style="font-size:18px">Claude Code</text>
+<text x="105" y="252" class="muted">Read tool returns PNG</text>
+<text x="105" y="282" class="text">tool_result.content[]</text>
+<path d="M330 245 H500" class="stroke arrow"/>
+<rect x="505" y="150" width="250" height="190" rx="18" class="panel"/>
+<text x="540" y="205" class="title" style="font-size:18px">DeepClaude proxy</text>
+<text x="540" y="242" class="green" style="font:15px ui-sans-serif">latest message has image?</text>
+<text x="540" y="272" class="muted">swap model + clean body</text>
+<path d="M765 210 H965" class="stroke arrow"/>
+<path d="M765 290 H965" class="stroke arrow"/>
+<rect x="970" y="135" width="170" height="120" rx="16" class="panel"/>
+<text x="1000" y="185" class="purple" style="font:700 17px ui-sans-serif">Anthropic</text>
+<text x="1000" y="215" class="muted">image turn</text>
+<rect x="970" y="285" width="170" height="120" rx="16" class="panel"/>
+<text x="1000" y="335" class="yellow" style="font:700 17px ui-sans-serif">DeepSeek</text>
+<text x="1000" y="365" class="muted">text follow-up</text>
+<text x="70" y="430" class="muted">Stale images in older history are replaced with text placeholders so a single screenshot doesn't silently burn Anthropic Max quota forever.</text>
+<text x="70" y="462" class="muted">Disable with: DEEPCLAUDE_IMAGE_FALLBACK=off</text>
+</svg>

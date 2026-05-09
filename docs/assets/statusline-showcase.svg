@@ -1,0 +1,17 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="520" viewBox="0 0 1200 520" role="img" aria-label="DeepClaude statusLine showing backend routing, token counts, cost and savings">
+<style>
+  .bg{fill:#0b1020}.panel{fill:#111827;stroke:#334155;stroke-width:1.5}.title{fill:#e5e7eb;font:700 22px ui-sans-serif,system-ui,-apple-system,Segoe UI,sans-serif}.text{fill:#cbd5e1;font:15px ui-monospace,SFMono-Regular,Menlo,Consolas,monospace}.muted{fill:#94a3b8;font:14px ui-sans-serif,system-ui}.green{fill:#34d399}.blue{fill:#60a5fa}.yellow{fill:#fbbf24}.red{fill:#fb7185}.purple{fill:#c084fc}.stroke{stroke:#475569;stroke-width:2;fill:none}.arrow{marker-end:url(#arrow)}
+</style>
+<defs><marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M 0 0 L 10 5 L 0 10 z" fill="#64748b"/></marker></defs>
+<rect class="bg" width="1200" height="520" rx="28"/>
+<text x="60" y="72" class="title">Live cost statusLine inside Claude Code</text>
+<text x="60" y="102" class="muted">See the real backend route, token volume, actual spend, and savings vs Anthropic while you work.</text>
+<rect x="60" y="135" width="1080" height="300" rx="18" class="panel"/>
+<circle cx="92" cy="165" r="7" fill="#ef4444"/><circle cx="115" cy="165" r="7" fill="#f59e0b"/><circle cx="138" cy="165" r="7" fill="#10b981"/>
+<text x="86" y="215" class="text"><tspan class="muted">$</tspan> deepclaude --auto -b ds</text>
+<text x="86" y="255" class="text"><tspan class="green">✓</tspan> Proxy on :3200 → https://api.deepseek.com/anthropic</text>
+<text x="86" y="295" class="text"><tspan class="blue">›</tspan> Claude Code session running...</text>
+<rect x="86" y="338" width="1028" height="58" rx="12" fill="#020617" stroke="#1e293b"/>
+<text x="112" y="374" class="text"><tspan class="purple">[claude-opus-4-7 → deepseek-v4-pro on api.deepseek.com]</tspan> · <tspan class="blue">↑5.2K</tspan> <tspan class="yellow">↓1.1K</tspan> · <tspan class="green">$0.04</tspan> <tspan class="green">(saved $0.13, 76%)</tspan></text>
+<text x="60" y="475" class="muted">Implemented by bin/deepclaude-statusline + /_proxy/status + /_proxy/cost.</text>
+</svg>
