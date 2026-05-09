@@ -1,37 +1,81 @@
 # DeepClaude
 
-**Claude Code’s agentic workflow, routed through DeepSeek and other lower-cost backends — with the model route, token usage, and spend visible while you work.**
+<div align="center">
 
-DeepClaude is a small launcher + local Anthropic-compatible proxy for [Claude Code](https://docs.anthropic.com/en/docs/claude-code). It keeps the Claude Code interface you already know, but sends requests to backends such as DeepSeek, OpenRouter, or Fireworks instead of forcing every turn through Anthropic.
+**Claude Code frontend. DeepSeek backend. Live route + cost visibility.**
+
+[![Claude Code](https://img.shields.io/badge/Claude%20Code-compatible-ff8a00)](https://docs.anthropic.com/en/docs/claude-code)
+[![Backends](https://img.shields.io/badge/backends-DeepSeek%20%7C%20OpenRouter%20%7C%20Fireworks%20%7C%20Anthropic-blue)](#backend-selection)
+[![Auto mode](https://img.shields.io/badge/auto%20mode-supported-yellow)](#auto-mode)
+[![License](https://img.shields.io/github/license/BenSheridanEdwards/DeepClaude)](#license)
+
+Use the Claude Code workflow you already like, but route the model calls through cheaper Anthropic-compatible backends — without losing sight of which model actually answered or what the session is costing.
+
+</div>
 
 <p align="center">
   <img src="docs/assets/deepclaude-normal-mode-terminal.png" alt="DeepClaude normal mode inside Claude Code" width="900">
 </p>
 
-## Why use it?
+## The pitch
 
-Claude Code is the best coding-agent interface many of us have used: repo awareness, tool orchestration, permissions, planning, editing, terminal execution, and a polished interactive loop.
+Claude Code is a great coding-agent interface: repo awareness, file edits, bash, git, planning, permissions, subagents, and an interactive terminal loop that feels good in real work.
 
-The tradeoff is cost and routing opacity.
+DeepClaude keeps that interface and changes the transport:
 
-DeepClaude keeps the UX and swaps the backend path:
+```text
+Claude Code UI  →  local DeepClaude proxy  →  DeepSeek / OpenRouter / Fireworks / Anthropic
+```
 
-- **Use Claude Code as the front end.** Keep `/model`, permissions, statusLine, IDE integration, and the autonomous agent loop.
-- **Route through cheaper backends.** Default to DeepSeek, or switch to OpenRouter / Fireworks / Anthropic when you need them.
-- **See the truth in the status line.** Claude Code may show canonical Claude names for compatibility; DeepClaude shows the actual backend route, tokens, and cost.
-- **Unlock auto workflows.** `--auto` lets Claude Code use its auto/bypassPermissions loop while DeepClaude maps those canonical Claude model names to your backend.
-- **Handle vision turns safely.** Image-containing turns can fall back to a vision-capable backend, then text-only follow-ups return to your primary route.
+No forked UI. No fake screenshots. No hidden routing. The bottom statusLine tells you the backend, token volume, spend, and estimated savings while you work.
+
+## At a glance
+
+| You get | Why it matters |
+|---|---|
+| **Claude Code as the frontend** | Keep the agentic coding loop, permissions, IDE context, `/model`, and familiar TUI. |
+| **Lower-cost backend routing** | Default to DeepSeek; switch to OpenRouter, Fireworks, or Anthropic when needed. |
+| **Truthful statusLine** | Claude Code compatibility labels can be confusing; DeepClaude shows the real backend route and cost. |
+| **`--auto` support** | Unlock Claude Code auto/bypass workflows while the proxy maps canonical Claude names to your backend. |
+| **Vision fallback** | Route image-bearing turns to a vision-capable backend, then return text-only turns to the primary backend. |
+| **Live diagnostics** | Inspect status, cost, proxy route, and switch backends without restarting the whole workflow. |
 
 ## What this fork adds
 
-This fork focuses on making DeepClaude feel like a real daily driver instead of a one-off proxy script:
+This fork turns DeepClaude from a clever proxy into something closer to a daily driver:
 
 - **Proxy-first launch:** `deepclaude` starts and supervises the local proxy before Claude Code opens.
 - **Live, truthful `statusLine`:** shows `Claude model → backend model on backend host`, token counts, cumulative spend, and estimated savings.
-- **`--auto` mode:** maps Claude Code’s canonical auto/bypass model names onto the selected backend, so auto workflows work without lying about where requests go.
+- **`--auto` mode:** maps Claude Code’s canonical auto/bypass model names onto the selected backend, so auto workflows work without pretending requests went somewhere else.
 - **Image fallback:** routes only image-bearing requests to a vision-capable backend instead of failing the whole session.
 - **Thinking-block continuity:** preserves Claude Code’s expected thinking/tool-call structure across proxy rewrites.
 - **Diagnostics:** status, cost, remote-control, and backend-switch commands for debugging a running session.
+
+## Demo: normal vs auto
+
+### Normal mode: maximum routing transparency
+
+```bash
+deepclaude
+```
+
+Use this when you want the UI and the backend path to be as explicit as possible. The DeepClaude statusLine is the route-of-record:
+
+```text
+[claude-opus-4-7 → deepseek-v4-pro on api.deepseek.com] · ↑5.2K ↓1.1K · $0.04 (saved $0.13)
+```
+
+### Auto mode: Claude Code autonomy, backend remapping
+
+```bash
+deepclaude --auto
+```
+
+<p align="center">
+  <img src="docs/assets/deepclaude-auto-mode-terminal.png" alt="DeepClaude auto mode inside Claude Code" width="900">
+</p>
+
+Auto mode enables Claude Code’s faster autonomous loop, including bypassPermissions-style workflows. Claude Code may display canonical Claude model names because its auto/permission gates are tied to those labels; DeepClaude still shows the actual backend route in the statusLine.
 
 ## Quick start
 
@@ -84,36 +128,6 @@ deepclaude
 
 That starts the local proxy, configures Claude Code to talk to it, installs the DeepClaude statusLine, and opens Claude Code.
 
-## Two modes
-
-### Normal mode
-
-```bash
-deepclaude
-```
-
-Use this when you want the most transparent path: Claude Code requests are routed through the selected backend and the statusLine shows the real destination.
-
-Example statusLine:
-
-```text
-[claude-opus-4-7 → deepseek-v4-pro on api.deepseek.com] · ↑5.2K ↓1.1K · $0.04 (saved $0.13)
-```
-
-### Auto mode
-
-```bash
-deepclaude --auto
-```
-
-Auto mode is for Claude Code’s faster, more autonomous loop — including bypassPermissions-style workflows.
-
-<p align="center">
-  <img src="docs/assets/deepclaude-auto-mode-terminal.png" alt="DeepClaude auto mode inside Claude Code" width="900">
-</p>
-
-Important caveat: Claude Code’s UI may still display canonical Claude model names because that is how Claude Code enables auto/bypass flows. DeepClaude’s statusLine is the source of truth for the actual backend route and cost.
-
 ## Backend selection
 
 Pick a backend at launch:
@@ -133,10 +147,20 @@ CHEAPCLAUDE_DEFAULT_BACKEND=or deepclaude
 
 Supported backend aliases:
 
-- `ds`: DeepSeek Anthropic-compatible endpoint
-- `or`: OpenRouter
-- `fw`: Fireworks
-- `anthropic`: Anthropic passthrough
+| Alias | Backend | Use it when |
+|---|---|---|
+| `ds` | DeepSeek | You want the default low-cost coding route. |
+| `or` | OpenRouter | You want provider flexibility or a vision fallback path. |
+| `fw` | Fireworks | You want Fireworks-hosted model routing. |
+| `anthropic` | Anthropic passthrough | You want to compare against the native Claude path. |
+
+## Mode matrix
+
+| Mode | Command | Claude Code UI may show | DeepClaude statusLine shows | Best for |
+|---|---|---|---|---|
+| Normal | `deepclaude` | Backend-native model labels | Actual backend route, tokens, cost | Transparent day-to-day coding |
+| Auto | `deepclaude --auto` | Canonical Claude labels | Canonical label → backend model | Auto/bypass workflows |
+| Vision fallback | `DEEPCLAUDE_IMAGE_FALLBACK=openrouter deepclaude` | Normal session UI | Image turns routed to fallback | Screenshot/image questions without pinning the whole session to vision |
 
 ## How it works
 
@@ -149,6 +173,7 @@ DeepClaude local proxy (127.0.0.1:3200)
    │
    ├─ rewrites model names when needed
    ├─ preserves Claude Code tool/thinking structure
+   ├─ detects image-bearing turns for fallback routing
    ├─ tracks tokens, costs, and estimated savings
    ├─ exposes /_proxy/status and /_proxy/cost
    │
@@ -157,6 +182,22 @@ DeepSeek / OpenRouter / Fireworks / Anthropic
 ```
 
 DeepClaude does not replace Claude Code. It sits between Claude Code and the model provider, translating just enough for Claude Code’s UX to keep working while the backend changes.
+
+### What stays the same
+
+- Claude Code’s terminal interface
+- repo and IDE context
+- file reads/writes and bash tools
+- permission modes and agent loop
+- your normal Claude Code workflow
+
+### What DeepClaude changes
+
+- the upstream model provider
+- model-name mapping when Claude Code needs canonical names
+- image-turn fallback routing
+- status/cost visibility
+- backend switching and local diagnostics
 
 ## Live switching and diagnostics
 
@@ -191,7 +232,7 @@ curl http://127.0.0.1:3200/_proxy/cost
 
 ## Image fallback
 
-Some backends are great for text/code but do not accept images. DeepClaude can detect image-bearing requests and route those specific turns to a vision-capable fallback.
+Some backends are excellent for text and code but do not accept image content blocks. DeepClaude can detect image-bearing requests and route those specific turns to a vision-capable fallback.
 
 ```bash
 DEEPCLAUDE_IMAGE_FALLBACK=openrouter deepclaude
