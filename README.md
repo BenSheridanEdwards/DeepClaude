@@ -366,3 +366,7 @@ This fork is biased toward practical Claude Code compatibility: fewer surprises,
 ## License
 
 MIT
+
+## Acknowledgements
+
+DeepClaude was originally created by [aattaran](https://github.com/aattaran) in [aattaran/deepclaude](https://github.com/aattaran/deepclaude). This fork builds on that foundation and keeps the original project's goal intact: bring Claude Code's agentic workflow to lower-cost, Anthropic-compatible backends.
