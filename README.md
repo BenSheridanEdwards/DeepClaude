@@ -4,7 +4,7 @@ Use Claude Code's autonomous agent loop with **DeepSeek V4 Pro**, **OpenRouter**
 
 This fork adds a proxy-first Claude Code experience with live cost visibility, optional `--auto` mode, transparent image fallback, and better backend diagnostics.
 
-![DeepClaude statusLine showing backend routing, tokens, cost, and savings](docs/assets/statusline-showcase.svg)
+![DeepClaude terminal showing status, configured providers, model routing, and live cost controls](docs/assets/deepclaude-status-render.png)
 
 ## What's new in this fork
 
@@ -36,9 +36,11 @@ DeepSeek V4 Pro is much cheaper than Anthropic Opus-class pricing, and DeepSeek'
 
 DeepClaude installs a Claude Code `statusLine` automatically when possible. The status line polls the local proxy and shows the model Claude Code thinks it is using, the model actually sent to the backend, token volume, actual cost, and estimated savings.
 
-![Live cost statusLine](docs/assets/statusline-showcase.svg)
+![DeepClaude status terminal screenshot](docs/assets/deepclaude-status-render.png)
 
-Example output:
+The rendered terminal above shows the fork's status surface: configured providers, selected backend, model mapping, proxy health, and the commands users can run to inspect routing and spend.
+
+Example statusLine output:
 
 ```text
 [claude-opus-4-7 → deepseek-v4-pro on api.deepseek.com] · ↑5.2K ↓1.1K · $0.04 (saved $0.13, 76%)
