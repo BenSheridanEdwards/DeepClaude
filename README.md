@@ -53,6 +53,12 @@ This fork turns DeepClaude from a clever proxy into something closer to a daily 
 
 ## Demo: normal vs auto
 
+<p align="center">
+  <img src="docs/assets/deepclaude-demo.gif" alt="Animated DeepClaude demo switching from normal mode to auto mode" width="900">
+</p>
+
+The GIF uses the same real terminal captures as the screenshots below: normal mode shows backend-native routing, while `--auto` keeps Claude Code's autonomy flow enabled and lets DeepClaude remap the backend behind the scenes.
+
 ### Normal mode: maximum routing transparency
 
 ```bash
