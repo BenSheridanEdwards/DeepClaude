@@ -120,15 +120,20 @@ curl -sX POST http://127.0.0.1:3200/_proxy/mode -d "backend=deepseek"
 DeepSeek is the default backend:
 
 ```bash
-export DEEPSEEK_API_KEY="sk-..."
+cp .env.example .env
+$EDITOR .env
 ```
 
 Optional backends:
 
 ```bash
-export OPENROUTER_API_KEY="sk-or-..."
-export FIREWORKS_API_KEY="fw_..."
+DEEPSEEK_API_KEY=sk-...
+OPENROUTER_API_KEY=sk-or-...
+FIREWORKS_API_KEY=fw_...
 ```
+
+DeepClaude loads `.env.example` as safe defaults, then loads `.env` for local
+secrets. `.env` is gitignored and overrides the defaults.
 
 ### 2. Install
 

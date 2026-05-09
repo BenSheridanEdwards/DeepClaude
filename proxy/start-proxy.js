@@ -7,9 +7,10 @@ const BACKEND_DEFS = {
     fireworks: { url: 'https://api.fireworks.ai/inference/v1', keyEnv: 'FIREWORKS_API_KEY' },
 };
 
-// Legacy mode: start-proxy.js <targetUrl> <apiKey> [defaultMode] (used by deepclaude.sh/ps1)
+// Legacy mode: prefer env vars so API keys are not exposed in process args.
+// argv fallback remains for older launchers: start-proxy.js <targetUrl> <apiKey> [defaultMode].
 const targetUrl = process.argv[2] || process.env.CHEAPCLAUDE_TARGET_URL;
-const apiKey = process.argv[3] || process.env.CHEAPCLAUDE_API_KEY;
+const apiKey = process.env.CHEAPCLAUDE_API_KEY || process.argv[3];
 const legacyDefaultMode = process.argv[4] || process.env.CHEAPCLAUDE_DEFAULT_MODE;
 
 if (targetUrl && apiKey) {

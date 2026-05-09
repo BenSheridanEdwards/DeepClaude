@@ -27,6 +27,50 @@ param(
 
 $ErrorActionPreference = "Stop"
 
+$ScriptDir = Split-Path -Parent $MyInvocation.MyCommand.Path
+
+function Import-DeepClaudeEnvFile($Path, [bool]$OverrideExisting = $false) {
+    if (-not (Test-Path $Path)) { return }
+
+    Get-Content $Path | ForEach-Object {
+        $line = $_.Trim()
+        if (-not $line -or $line.StartsWith("#")) { return }
+        if ($line.StartsWith("export ")) { $line = $line.Substring(7).Trim() }
+        if ($line -notmatch "=") { return }
+
+        $parts = $line.Split("=", 2)
+        $key = $parts[0].Trim()
+        $value = $parts[1].Trim()
+        if (-not $value) { return }
+
+        if (($value.StartsWith('"') -and $value.EndsWith('"')) -or
+            ($value.StartsWith("'") -and $value.EndsWith("'"))) {
+            $value = $value.Substring(1, $value.Length - 2)
+        }
+
+        switch ($key) {
+            "DEEPSEEK_API_KEY" {
+                if ($OverrideExisting -or -not $env:DEEPSEEK_API_KEY) { $env:DEEPSEEK_API_KEY = $value }
+            }
+            "OPENROUTER_API_KEY" {
+                if ($OverrideExisting -or -not $env:OPENROUTER_API_KEY) { $env:OPENROUTER_API_KEY = $value }
+            }
+            "FIREWORKS_API_KEY" {
+                if ($OverrideExisting -or -not $env:FIREWORKS_API_KEY) { $env:FIREWORKS_API_KEY = $value }
+            }
+            "CHEAPCLAUDE_DEFAULT_BACKEND" {
+                if ($OverrideExisting -or -not $env:CHEAPCLAUDE_DEFAULT_BACKEND) { $env:CHEAPCLAUDE_DEFAULT_BACKEND = $value }
+            }
+            "DEEPCLAUDE_IMAGE_FALLBACK" {
+                if ($OverrideExisting -or -not $env:DEEPCLAUDE_IMAGE_FALLBACK) { $env:DEEPCLAUDE_IMAGE_FALLBACK = $value }
+            }
+        }
+    }
+}
+
+Import-DeepClaudeEnvFile (Join-Path $ScriptDir ".env.example") $false
+Import-DeepClaudeEnvFile (Join-Path $ScriptDir ".env") $true
+
 if (-not $Backend -and -not $Status -and -not $Cost -and -not $Benchmark -and -not $Help) {
     $Backend = if ($env:CHEAPCLAUDE_DEFAULT_BACKEND) { $env:CHEAPCLAUDE_DEFAULT_BACKEND } else { "ds" }
 }

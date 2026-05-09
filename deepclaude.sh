@@ -16,6 +16,44 @@ done
 SCRIPT_DIR="$(cd "$(dirname "$_source")" && pwd)"
 unset _source _dir
 
+load_env_file() {
+    local env_file="$1" override_existing="${2:-0}" line key value
+    [[ -f "$env_file" ]] || return 0
+
+    while IFS= read -r line || [[ -n "$line" ]]; do
+        line="${line#"${line%%[![:space:]]*}"}"
+        line="${line%"${line##*[![:space:]]}"}"
+        [[ -z "$line" || "${line:0:1}" == "#" ]] && continue
+        [[ "$line" == export\ * ]] && line="${line#export }"
+        [[ "$line" == *=* ]] || continue
+
+        key="${line%%=*}"
+        value="${line#*=}"
+        key="${key%"${key##*[![:space:]]}"}"
+        value="${value#"${value%%[![:space:]]*}"}"
+        value="${value%"${value##*[![:space:]]}"}"
+        [[ -z "$value" ]] && continue
+
+        if [[ "$value" == \"*\" && "$value" == *\" ]]; then
+            value="${value:1:${#value}-2}"
+        elif [[ "$value" == \'*\' && "$value" == *\' ]]; then
+            value="${value:1:${#value}-2}"
+        fi
+
+        case "$key" in
+            DEEPSEEK_API_KEY|OPENROUTER_API_KEY|FIREWORKS_API_KEY|CHEAPCLAUDE_DEFAULT_BACKEND|DEEPCLAUDE_IMAGE_FALLBACK)
+                if [[ "$override_existing" != "1" && -n "${!key:-}" ]]; then
+                    continue
+                fi
+                export "$key=$value"
+                ;;
+        esac
+    done < "$env_file"
+}
+
+load_env_file "$SCRIPT_DIR/.env.example" 0
+load_env_file "$SCRIPT_DIR/.env" 1
+
 # --- Config ---
 DEEPSEEK_URL="https://api.deepseek.com/anthropic"
 OPENROUTER_URL="https://openrouter.ai/api"
@@ -136,7 +174,10 @@ start_proxy() {
 
     PROXY_LOG="${PROXY_LOG:-/tmp/deepclaude-proxy.$$.log}"
     : > "$PROXY_LOG"
-    node "$SCRIPT_DIR/proxy/start-proxy.js" "$RESOLVED_URL" "$RESOLVED_KEY" "$backend_long" >> "$PROXY_LOG" 2>&1 &
+    CHEAPCLAUDE_TARGET_URL="$RESOLVED_URL" \
+    CHEAPCLAUDE_API_KEY="$RESOLVED_KEY" \
+    CHEAPCLAUDE_DEFAULT_MODE="$backend_long" \
+        node "$SCRIPT_DIR/proxy/start-proxy.js" >> "$PROXY_LOG" 2>&1 &
     PROXY_PID=$!
 
     # Wait for a line that is a bare integer (the port emitted by start-proxy.js
