@@ -4,7 +4,9 @@ Use Claude Code's autonomous agent loop with **DeepSeek V4 Pro**, **OpenRouter**
 
 This fork adds a proxy-first Claude Code experience with live cost visibility, optional `--auto` mode, transparent image fallback, and better backend diagnostics.
 
-![DeepClaude terminal showing status, configured providers, model routing, and live cost controls](docs/assets/deepclaude-status-render.png)
+![DeepClaude running Claude Code in normal mode with DeepSeek routing and live cost status](docs/assets/deepclaude-normal-mode-terminal.png)
+
+In normal mode, Claude Code shows the real backend model (`deepseek-v4-pro`) while DeepClaude keeps the proxy, token, and cost truth visible in the bottom status line.
 
 ## What's new in this fork
 
@@ -32,13 +34,13 @@ DeepSeek V4 Pro is much cheaper than Anthropic Opus-class pricing, and DeepSeek'
 
 ## Feature showcase
 
-### Live cost statusLine
+### Normal mode: truthful backend names plus live cost
 
 DeepClaude installs a Claude Code `statusLine` automatically when possible. The status line polls the local proxy and shows the model Claude Code thinks it is using, the model actually sent to the backend, token volume, actual cost, and estimated savings.
 
-![DeepClaude status terminal screenshot](docs/assets/deepclaude-status-render.png)
+![DeepClaude normal mode Terminal screenshot](docs/assets/deepclaude-normal-mode-terminal.png)
 
-The rendered terminal above shows the fork's status surface: configured providers, selected backend, model mapping, proxy health, and the commands users can run to inspect routing and spend.
+Default launches keep the TUI honest: Claude Code sees `deepseek-v4-pro`, requests route through the local proxy, and the bottom status line remains the source of truth for routing, tokens, and spend.
 
 Example statusLine output:
 
@@ -76,7 +78,7 @@ Behavior:
 - `Shift+Tab` can cycle through Claude Code's permission modes, including `auto` and `bypassPermissions`.
 - The statusLine shows the truth: `claude-opus-4-7 → deepseek-v4-pro`.
 
-Trade-off: in `--auto` mode, Claude Code's own TUI may display canonical Claude names. The statusLine is the source of truth for the actual backend route.
+Trade-off: in `--auto` mode, Claude Code's own welcome chip may display canonical Claude names because that is what unlocks Claude Code's permission gate. The proxy still remaps requests to the configured backend, and the statusLine restores the ground truth by showing `claude-opus-4-7 → deepseek-v4-pro`. Use normal mode when you want the TUI itself to show backend-native names; use `--auto` when permission automation matters more than the welcome chip label.
 
 ### Transparent image fallback
 
@@ -99,6 +101,8 @@ Image fallback is on by default. Disable it with:
 DEEPCLAUDE_IMAGE_FALLBACK=off deepclaude
 ```
 
+Caveat: fallback only reroutes turns whose latest message contains an image. Follow-up text turns return to the configured backend after stale image blocks are replaced with `[image omitted]`; if a later question needs to inspect pixels again, read or attach the image again so that turn can route to Anthropic.
+
 ### Proxy-first architecture
 
 Normal `deepclaude` launches and `deepclaude --remote` both go through the model proxy. That makes the proxy the single place for live switching, status, cost accounting, image fallback, model remapping, and request cleanup.
@@ -120,15 +124,21 @@ curl -sX POST http://127.0.0.1:3200/_proxy/mode -d "backend=deepseek"
 DeepSeek is the default backend:
 
 ```bash
-export DEEPSEEK_API_KEY="sk-..."
+cp .env.example .env
+$EDITOR .env
 ```
 
 Optional backends:
 
 ```bash
-export OPENROUTER_API_KEY="sk-or-..."
-export FIREWORKS_API_KEY="fw_..."
+# .env
+DEEPSEEK_API_KEY=sk-...
+OPENROUTER_API_KEY=sk-or-...
+FIREWORKS_API_KEY=fw_...
 ```
+
+You can still export these variables in your shell if you prefer. Values in
+`.env` override `.env.example`; `.env` is gitignored so real keys stay local.
 
 ### 2. Install
 
